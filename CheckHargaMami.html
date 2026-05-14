@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check Harga Mami 🛒</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1117;--s:#1a1d27;--s2:#222636;--b:#2e3347;--ac:#f0b429;--g:#4ade80;--r:#f87171;--y:#fbbf24;--bl:#60a5fa;--mu:#6b7280;--t:#e8eaf0;--t2:#9aa3b2;--pk:#f472b6;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;padding-bottom:80px;}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#1a0a2e,#2a1050);border-bottom:2px solid var(--pk);padding:16px 16px 12px;position:sticky;top:0;z-index:100;}
+.hdr h1{font-size:18px;font-weight:800;background:linear-gradient(90deg,#f472b6,#f0b429);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hdr-meta{font-size:10px;color:var(--t2);margin-top:3px;}
+
+/* API KEY SETUP */
+.setup{margin:20px 16px;background:var(--s);border:1px solid var(--b);border-radius:14px;padding:16px;}
+.setup h2{font-size:14px;font-weight:800;color:var(--ac);margin-bottom:6px;}
+.setup p{font-size:11px;color:var(--t2);line-height:1.7;margin-bottom:12px;}
+.setup-row{display:flex;gap:8px;align-items:center;}
+.key-input{flex:1;background:var(--s2);border:1px solid var(--b);border-radius:9px;padding:11px 12px;color:var(--t);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;outline:none;}
+.key-input:focus{border-color:var(--pk);}
+.key-input::placeholder{color:var(--mu);}
+.key-save{background:var(--pk);color:#fff;border:none;border-radius:9px;padding:11px 14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.key-ok{display:none;margin-top:8px;font-size:11px;color:var(--g);}
+.key-ok.on{display:block;}
+.key-change{font-size:10px;color:var(--pk);cursor:pointer;margin-top:6px;display:inline-block;}
+
+/* ACTION BAR */
+.bar{padding:12px 16px;background:var(--s);border-bottom:1px solid var(--b);display:flex;flex-direction:column;gap:8px;}
+
+/* UPLOAD — input di dalam button container, overlap penuh */
+.up-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;}
+.up-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;pointer-events:none;}
+.up-file{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;-webkit-tap-highlight-color:transparent;}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:11px;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.btn:active{filter:brightness(0.85);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-upd{background:linear-gradient(135deg,#1e3a5f,#1e5fa0);border:1px solid #3b82f6;color:#93c5fd;}
+.btn-shr{background:linear-gradient(135deg,#be185d,#ec4899);color:#fff;}
+.btn-clr{background:var(--s2);border:1px solid var(--b);color:var(--t2);font-size:12px;padding:9px;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:currentColor;border-radius:50%;animation:sp 0.8s linear infinite;display:none;}
+.loading .spin{display:block;}.loading .bi{display:none;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+.uinf{font-size:10px;color:var(--t2);text-align:center;}
+.stag{display:inline-block;background:var(--s2);border:1px solid var(--b);border-radius:4px;padding:1px 6px;font-size:9px;margin:2px 1px 0;}
+.plog{display:none;background:var(--s2);border:1px solid var(--b);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--t2);line-height:1.9;max-height:110px;overflow-y:auto;}
+.plog.on{display:block;}
+.ld{color:var(--g);}.le{color:var(--r);}.lw{color:var(--y);}
+@keyframes fi{from{opacity:0;transform:translateY(3px);}to{opacity:1;}}
+.ll{animation:fi 0.2s ease;}
+
+/* EMPTY */
+.empty{margin:28px 16px;text-align:center;padding:28px 20px;background:var(--s);border:2px dashed var(--b);border-radius:16px;}
+.empty-ic{font-size:44px;margin-bottom:10px;}
+.empty-t{font-size:15px;font-weight:700;margin-bottom:8px;}
+.empty-s{font-size:12px;color:var(--t2);line-height:1.8;}
+
+/* STRUK PREVIEW */
+.sp{display:none;margin:12px 16px 0;background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden;}
+.sp.on{display:block;}
+.sp-hd{padding:10px 12px;background:var(--s2);border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px;}
+.sp-img{width:54px;height:54px;object-fit:cover;border-radius:7px;flex-shrink:0;border:1px solid var(--b);}
+.sp-st{font-size:13px;font-weight:700;}
+.sp-dt{font-size:10px;color:var(--t2);margin-top:2px;}
+.sp-to{font-size:11px;color:var(--ac);font-weight:700;margin-top:2px;}
+.sp-ls{padding:8px 12px;max-height:180px;overflow-y:auto;}
+.sp-rw{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--b);font-size:11px;}
+.sp-rw:last-child{border:none;}
+.sp-rn{flex:1;padding-right:8px;}
+.sp-rp{color:var(--t2);white-space:nowrap;}
+
+/* SUMMARY */
+.sum{padding:12px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.sc{background:var(--s);border-radius:10px;padding:9px 7px;border:1px solid var(--b);text-align:center;}
+.sc .v{font-size:12px;font-weight:800;line-height:1.2;}
+.sc .l{font-size:9px;color:var(--t2);margin-top:2px;line-height:1.3;}
+.sc.tko .v{color:var(--ac);}.sc.sav .v{color:var(--g);}.sc.cnt .v{color:var(--bl);}
+
+/* LEGEND */
+.leg{margin:0 16px 10px;background:var(--s);border-radius:9px;padding:8px 11px;border:1px solid var(--b);display:flex;gap:10px;flex-wrap:wrap;}
+.lgi{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t2);}
+.lgd{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* TABS */
+.tabs{padding:0 16px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{background:var(--s);border:1px solid var(--b);border-radius:18px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--t2);cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.tab.active{background:var(--pk);color:#fff;border-color:var(--pk);}
+
+/* SECTION */
+.stit{margin:5px 16px 8px;font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;display:flex;align-items:center;gap:7px;}
+.stit::after{content:'';flex:1;height:1px;background:var(--b);}
+
+/* ITEM CARD */
+.ic{margin:0 16px 8px;background:var(--s);border-radius:12px;border:1px solid var(--b);overflow:hidden;}
+.ic.cheaper{border-left:3px solid var(--g);}.ic.same{border-left:3px solid var(--y);}.ic.pricier{border-left:3px solid var(--r);}.ic.nodata{border-left:3px solid var(--mu);}.ic.hidden{display:none;}
+.ih{padding:9px 11px 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:7px;}
+.iname{font-size:12px;font-weight:700;line-height:1.3;flex:1;}
+.iqty{font-size:10px;color:var(--t2);background:var(--s2);padding:2px 6px;border-radius:5px;white-space:nowrap;flex-shrink:0;}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);padding:0 11px 8px;gap:4px;}
+.pc{background:var(--s2);border-radius:7px;padding:6px 5px;text-align:center;}
+.pc .sto{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;}
+.pc.toko .sto{color:var(--ac);}.pc.indo .sto{color:#ef4444;}.pc.alfa .sto{color:#3b82f6;}
+.pc .pr{font-size:11px;font-weight:700;line-height:1.2;}
+.pr.best{color:var(--g);}.pr.worst{color:var(--r);}.pr.mid{color:var(--t);}.pr.na{color:var(--mu);font-size:10px;}
+.pc .sub{font-size:9px;color:var(--t2);margin-top:2px;}
+.vr{padding:4px 11px 9px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.vb{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;white-space:nowrap;}
+.vb-g{background:rgba(74,222,128,0.12);color:var(--g);}.vb-r{background:rgba(248,113,113,0.12);color:var(--r);}.vb-y{background:rgba(251,191,36,0.12);color:var(--y);}.vb-m{background:rgba(107,114,128,0.12);color:var(--mu);}
+.vt{font-size:10px;color:var(--t2);flex:1;line-height:1.3;}
+.vsrc{margin:0 11px 7px;font-size:9px;color:var(--mu);font-style:italic;}
+
+/* TOTAL */
+.tot{margin:14px 16px 0;background:var(--s2);border:1px solid var(--b);border-radius:12px;padding:13px;}
+.tot h3{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.tr{display:flex;justify-content:space-between;margin-bottom:6px;}
+.tr .tl{font-size:11px;color:var(--t2);}.tr .ta{font-size:12px;font-weight:700;}
+.tr.tko .ta{color:var(--ac);}.tr.ind .ta{color:#ef4444;}.tr.alf .ta{color:#3b82f6;}.tr.sv .ta{color:var(--g);}
+.tdv{height:1px;background:var(--b);margin:8px 0;}
+.bestb{margin-top:10px;background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.2);border-radius:9px;padding:12px;text-align:center;}
+.bestb .bl{font-size:10px;color:var(--t2);margin-bottom:3px;}
+.bestb .bv{font-size:15px;font-weight:800;color:var(--pk);}
+.bestb .bs{font-size:10px;color:var(--t2);margin-top:4px;line-height:1.6;}
+
+/* SHARE */
+.shr{display:none;margin:10px 16px 0;background:var(--s);border:1px solid var(--pk);border-radius:12px;padding:14px;}
+.shr.on{display:block;}
+.shr h3{font-size:13px;font-weight:800;color:var(--pk);margin-bottom:8px;}
+.shr-st{font-size:11px;color:var(--t2);line-height:2;background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:10px;}
+.shr-st strong{color:var(--t);}
+.wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;background:#25d366;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer;}
+
+.foot{margin:14px 16px 0;font-size:10px;color:var(--mu);text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <h1>🛒 Check Harga Mami</h1>
+  <div class="hdr-meta" id="hMeta">Upload struk belanja untuk mulai</div>
+</div>
+
+<!-- API KEY SETUP -->
+<div class="setup" id="setupEl">
+  <h2>🔑 Setup API Key (sekali saja)</h2>
+  <p>
+    App ini butuh <strong>Anthropic API Key</strong> untuk membaca struk dan cek harga.<br>
+    Key disimpan di HP kamu saja (tidak dikirim ke mana-mana selain Anthropic).<br><br>
+    Cara dapat API Key gratis:<br>
+    1. Buka <strong>console.anthropic.com</strong><br>
+    2. Daftar / login<br>
+    3. Klik <strong>API Keys → Create Key</strong><br>
+    4. Copy key yang dimulai dengan <code>sk-ant-...</code>
+  </p>
+  <div class="setup-row">
+    <input class="key-input" type="password" id="keyInput" placeholder="sk-ant-api03-...">
+    <button class="key-save" onclick="saveKey()">Simpan</button>
+  </div>
+  <div class="key-ok" id="keyOk">✅ API Key tersimpan! Sekarang bisa upload struk.</div>
+  <span class="key-change" id="keyChange" style="display:none;" onclick="resetKey()">🔄 Ganti API Key</span>
+</div>
+
+<!-- ACTION BAR -->
+<div class="bar" id="barEl" style="display:none;">
+
+  <!-- Upload: input[type=file] overlap penuh di atas button visual -->
+  <div class="up-wrap">
+    <div class="up-btn">
+      <span>📸</span>
+      <span id="upTxt">Upload Struk Belanja</span>
+    </div>
+    <input class="up-file" type="file" accept="image/*" id="fileInput" onchange="processStruk(event)">
+  </div>
+
+  <div class="r2" id="r2" style="display:none;">
+    <button class="btn btn-upd" id="btnUpd" onclick="updateHarga()">
+      <span class="bi">🔄</span><div class="spin"></div>
+      <span id="updTxt">Update Harga</span>
+    </button>
+    <button class="btn btn-shr" onclick="toggleShr()">
+      <span>💌</span><span>Bagikan</span>
+    </button>
+  </div>
+
+  <button class="btn btn-clr" id="btnClr" style="display:none;" onclick="clearAll()">
+    🗑️ Hapus &amp; Upload Baru
+  </button>
+
+  <div class="uinf" id="uiInf" style="display:none;"></div>
+  <div class="plog" id="plog"></div>
+</div>
+
+<!-- EMPTY STATE -->
+<div class="empty" id="emEl" style="display:none;">
+  <div class="empty-ic">🧾</div>
+  <div class="empty-t">Belum ada struk</div>
+  <div class="empty-s">
+    Tap tombol ungu <strong>"Upload Struk Belanja"</strong>.<br>
+    Pilih foto dari <strong>galeri HP</strong>.<br><br>
+    ✅ AI baca semua item otomatis<br>
+    ✅ Bandingkan harga Indomaret &amp; Alfamart<br>
+    ✅ Bisa untuk struk toko manapun
+  </div>
+</div>
+
+<!-- STRUK PREVIEW -->
+<div class="sp" id="spEl">
+  <div class="sp-hd">
+    <img id="spImg" class="sp-img" src="" alt="">
+    <div>
+      <div class="sp-st" id="spSt">—</div>
+      <div class="sp-dt" id="spDt">—</div>
+      <div class="sp-to" id="spTo">—</div>
+    </div>
+  </div>
+  <div class="sp-ls" id="spLs"></div>
+</div>
+
+<!-- SUMMARY -->
+<div class="sum" id="sumEl" style="display:none;">
+  <div class="sc tko"><div class="v" id="sTot">—</div><div class="l" id="lTok">Total Toko</div></div>
+  <div class="sc sav"><div class="v" id="sSav">—</div><div class="l">Potensi hemat</div></div>
+  <div class="sc cnt"><div class="v" id="sCnt">—</div><div class="l">Total item</div></div>
+</div>
+
+<!-- LEGEND -->
+<div class="leg" id="legEl" style="display:none;">
+  <div class="lgi"><div class="lgd" style="background:var(--g)"></div>Lebih murah di minimarket</div>
+  <div class="lgi"><div class="lgd" style="background:var(--y)"></div>Hampir sama</div>
+  <div class="lgi"><div class="lgd" style="background:var(--r)"></div>Toko lebih murah</div>
+  <div class="lgi"><div class="lgd" style="background:var(--mu)"></div>Data N/A</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs" id="tabsEl" style="display:none;">
+  <div class="tab active" onclick="fCat('all',this)">Semua</div>
+  <div class="tab" onclick="fCat('makanan',this)">🍞 Makanan</div>
+  <div class="tab" onclick="fCat('minuman',this)">🧃 Minuman</div>
+  <div class="tab" onclick="fCat('perawatan',this)">🧴 Perawatan</div>
+  <div class="tab" onclick="fCat('dapur',this)">🥄 Dapur</div>
+  <div class="tab" onclick="fCat('lainnya',this)">📦 Lainnya</div>
+</div>
+
+<!-- ITEMS LIST -->
+<div id="iList"></div>
+
+<!-- TOTAL BOX -->
+<div class="tot" id="totEl" style="display:none;">
+  <h3>📊 Ringkasan Belanja</h3>
+  <div class="tr tko"><span class="tl" id="ttLbl">🏪 Total Toko</span><span class="ta" id="ttTok">—</span></div>
+  <div class="tr ind"><span class="tl">🔴 Est. Indomaret</span><span class="ta" id="ttInd">—</span></div>
+  <div class="tr alf"><span class="tl">🔵 Est. Alfamart</span><span class="ta" id="ttAlf">—</span></div>
+  <div class="tdv"></div>
+  <div class="tr sv"><span class="tl">💰 Potensi Hemat</span><span class="ta" id="ttSav">—</span></div>
+  <div class="bestb">
+    <div class="bl">💡 Rekomendasi untuk Mami</div>
+    <div class="bv" id="bstV">Upload struk &amp; update harga dulu 😊</div>
+    <div class="bs" id="bstS">Rekomendasi muncul setelah update harga.</div>
+  </div>
+</div>
+
+<!-- SHARE PANEL -->
+<div class="shr" id="shrEl">
+  <h3>💌 Bagikan ke Istri</h3>
+  <div class="shr-st">
+    <strong>Kirim link halaman ini:</strong><br>
+    Karena sudah di GitHub Pages, tinggal copy URL<br>
+    dari address bar → kirim ke istri via WhatsApp.<br>
+    Istri buka link → input API Key → langsung pakai! 🎉<br><br>
+    <strong>Atau kirim ringkasan hasil belanja:</strong>
+  </div>
+  <button class="wa-btn" onclick="sendWA()">💬 Kirim Ringkasan via WhatsApp</button>
+</div>
+
+<div class="foot" id="ftEl" style="display:none;">
+  Check Harga Mami · Perbandingan harga via AI · Jawa Timur
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────
+let ITEMS=[],SNAME='Toko',SDATE='',STOT=0;
+let API_KEY='';
+const f=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
+const td=()=>new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+
+// ── API KEY MANAGEMENT ─────────────────────────────
+function initKey(){
+  const saved=localStorage.getItem('chm_apikey')||'';
+  if(saved){
+    API_KEY=saved;
+    document.getElementById('setupEl').style.display='none';
+    document.getElementById('barEl').style.display='';
+    document.getElementById('emEl').style.display='';
+    document.getElementById('keyOk').classList.add('on');
+    document.getElementById('keyChange').style.display='inline-block';
+  }
+}
+function saveKey(){
+  const val=document.getElementById('keyInput').value.trim();
+  if(!val.startsWith('sk-')){alert('API Key tidak valid. Harus dimulai dengan sk-ant-...');return;}
+  API_KEY=val;
+  localStorage.setItem('chm_apikey',val);
+  document.getElementById('keyOk').classList.add('on');
+  document.getElementById('keyChange').style.display='inline-block';
+  setTimeout(()=>{
+    document.getElementById('setupEl').style.display='none';
+    document.getElementById('barEl').style.display='';
+    document.getElementById('emEl').style.display='';
+  },800);
+}
+function resetKey(){
+  localStorage.removeItem('chm_apikey');
+  API_KEY='';
+  document.getElementById('keyInput').value='';
+  document.getElementById('keyOk').classList.remove('on');
+  document.getElementById('setupEl').style.display='';
+  document.getElementById('barEl').style.display='none';
+}
+
+// ── PROCESS STRUK ──────────────────────────────────
+async function processStruk(e){
+  const file=e.target.files[0];e.target.value='';
+  if(!file)return;
+  if(!API_KEY){alert('Masukkan API Key dulu!');return;}
+  document.getElementById('upTxt').textContent='Membaca struk...';
+  document.getElementById('fileInput').disabled=true;
+  clearLog();showLog();addLog('📸 Membaca gambar...');
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const full=ev.target.result,b64=full.split(',')[1];
+      document.getElementById('spImg').src=full;
+      addLog('🤖 AI menganalisis struk...');
+      const p=`Ini foto struk belanja supermarket Indonesia. Baca semua item dengan teliti.
+Balas HANYA JSON berikut, tanpa teks lain, tanpa markdown:
+{"toko":"nama toko","tanggal":"tanggal dari struk","items":[{"nama":"nama produk","qty":1,"harga_satuan":15000,"kategori":"makanan"}],"total_belanja":100000,"disc_promo":0}
+Kategori: makanan/minuman/perawatan/dapur/lainnya. Harga=integer satuan per pcs.`;
+      const txt=await ai(p,b64);
+      const data=exJ(txt);
+      if(!data?.items?.length)throw new Error('Gagal baca struk. Coba foto lebih dekat & terang.');
+      addLog(`✅ Terbaca ${data.items.length} item!`,'done');
+      SNAME=data.toko||'Toko';SDATE=data.tanggal||td();
+      STOT=data.total_belanja||data.items.reduce((a,i)=>a+(i.harga_satuan||0)*(i.qty||1),0);
+      ITEMS=data.items.map((it,i)=>({key:'k'+i,name:it.nama||'item'+i,cat:it.kategori||'lainnya',roxy:it.harga_satuan||0,qty:it.qty||1}));
+      renderAll();showUI();
+      addLog('✨ Tap "Update Harga" untuk bandingkan!','done');
+    }catch(err){addLog('❌ '+err.message,'err');}
+    document.getElementById('upTxt').textContent='📸 Upload Struk Lain';
+    document.getElementById('fileInput').disabled=false;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── RENDER ─────────────────────────────────────────
+const CATS=[{id:'minuman',l:'Minuman',ic:'🧃'},{id:'makanan',l:'Makanan & Frozen',ic:'🍞'},{id:'dapur',l:'Dapur & Bumbu',ic:'🥄'},{id:'perawatan',l:'Perawatan Diri',ic:'🧴'},{id:'lainnya',l:'Rumah Tangga',ic:'📦'}];
+function renderAll(){
+  const list=document.getElementById('iList');list.innerHTML='';
+  CATS.forEach(cat=>{
+    const ci=ITEMS.filter(i=>i.cat===cat.id);if(!ci.length)return;
+    const s=document.createElement('div');s.className='stit';s.textContent=cat.ic+' '+cat.l;list.appendChild(s);
+    ci.forEach(item=>list.appendChild(mkCard(item)));
+  });
+  document.getElementById('sCnt').textContent=ITEMS.length+' item';
+  document.getElementById('sTot').textContent=f(STOT);
+  document.getElementById('lTok').textContent='Total '+SNAME;
+  document.getElementById('hMeta').textContent='🏪 '+SNAME+' · 📅 '+SDATE+' · 🧾 '+ITEMS.length+' item';
+  document.getElementById('spSt').textContent=SNAME;
+  document.getElementById('spDt').textContent=SDATE;
+  document.getElementById('spTo').textContent='Total: '+f(STOT);
+  const sl=document.getElementById('spLs');sl.innerHTML='';
+  ITEMS.forEach(it=>{const r=document.createElement('div');r.className='sp-rw';r.innerHTML=`<span class="sp-rn">${it.name}</span><span class="sp-rp">${it.qty}× ${f(it.roxy)}=${f(it.roxy*it.qty)}</span>`;sl.appendChild(r);});
+}
+function mkCard(item){
+  const d=document.createElement('div');d.className='ic nodata';d.dataset.cat=item.cat;d.dataset.key=item.key;
+  d.innerHTML=`<div class="ih"><div class="iname">${item.name}</div><div class="iqty">${item.qty} pcs · ${f(item.roxy*item.qty)}</div></div>
+<div class="pg">
+  <div class="pc toko"><div class="sto">Toko</div><div class="pr mid">${f(item.roxy)}</div><div class="sub">per pcs</div></div>
+  <div class="pc indo" id="pi-${item.key}"><div class="sto">Indomaret</div><div class="pr na">—</div><div class="sub">belum dicek</div></div>
+  <div class="pc alfa" id="pa-${item.key}"><div class="sto">Alfamart</div><div class="pr na">—</div><div class="sub">belum dicek</div></div>
+</div>
+<div class="vr"><span class="vb vb-m" id="vb-${item.key}">Belum Update</span><span class="vt" id="vt-${item.key}">Tekan "Update Harga"</span></div>
+<div class="vsrc" id="vs-${item.key}"></div>`;
+  return d;
+}
+
+// ── UPDATE HARGA ───────────────────────────────────
+async function updateHarga(){
+  const btn=document.getElementById('btnUpd');btn.disabled=true;btn.classList.add('loading');
+  document.getElementById('updTxt').textContent='Mencari...';
+  clearLog();showLog();
+  const now=td();const half=Math.ceil(ITEMS.length/2);let res={};
+  for(let b=0;b<2;b++){
+    const batch=ITEMS.slice(b?half:0,b?undefined:half);if(!batch.length)continue;
+    addLog(`🔍 Batch ${b+1}/2: ${batch.length} item...`);
+    const lines=batch.map(i=>`"${i.key}":"${i.name} toko:${f(i.roxy)}"`).join(',');
+    const keys=batch.map(i=>`"${i.key}"`).join(',');
+    const prompt=`Asisten cek harga belanja Indonesia. Hari ini: ${now}.
+Cari harga satuan terbaru di Indomaret dan Alfamart wilayah Jember Jawa Timur.
+Gunakan web search: klikindomaret.com, alfagift.id, hemat.id, promo terbaru.
+Produk:{${lines}}
+Balas HANYA JSON valid (tidak ada teks lain):
+{"r":{"${batch[0].key}":{"i":15500,"a":15500,"s":"sumber"}}}
+i=harga indomaret integer atau null, a=harga alfamart integer atau null, s=sumber singkat.
+Keys wajib:[${keys}]`;
+    try{const txt=await ai(prompt);const p=exJ(txt);if(!p?.r)throw new Error('JSON invalid');Object.assign(res,p.r);addLog(`✅ Batch ${b+1} selesai`,'done');}
+    catch(er){addLog(`⚠️ Batch ${b+1}: ${er.message}`,'err');}
+  }
+  let sI=0,sA=0,cI=0,cA=0;
+  ITEMS.forEach(item=>{
+    const d=res[item.key]||{};applyCard(item.key,d.i??null,d.a??null,d.s||'',item.roxy);
+    addLog(`${d.i||d.a?'✅':'⚪'} ${item.name.slice(0,28)}: Indo ${d.i?f(d.i):'N/A'} | Alfa ${d.a?f(d.a):'N/A'}`,d.i||d.a?'done':'');
+    if(d.i!=null){sI+=d.i*item.qty;cI++;}if(d.a!=null){sA+=d.a*item.qty;cA++;}
+  });
+  const n=ITEMS.length;
+  if(cI)document.getElementById('ttInd').textContent=`~${f(sI)}${cI<n?' ('+cI+'/'+n+')':''}`;
+  if(cA)document.getElementById('ttAlf').textContent=`~${f(sA)}${cA<n?' ('+cA+'/'+n+')':''}`;
+  const bT=Math.min(sI||Infinity,sA||Infinity),sav=STOT-bT;
+  if(sav>0){document.getElementById('ttSav').textContent='~'+f(sav);document.getElementById('sSav').textContent='~'+f(sav);}
+  document.getElementById('ttTok').textContent=f(STOT);document.getElementById('ttLbl').textContent='🏪 Total di '+SNAME;
+  const bs=sI&&sA?(sI<sA?'Indomaret':sA<sI?'Alfamart':'Keduanya sama'):(sI?'Indomaret':'Alfamart');
+  document.getElementById('bstV').textContent=bs+(sav>0?' lebih hemat! 🎉':' — harga serupa');
+  document.getElementById('bstS').innerHTML=`Est. total ${bs}: ${f(Math.min(sI||9e9,sA||9e9))}<br>`+(sav>0?`Hemat sekitar ${f(sav)} dari ${SNAME}<br>`:'')+`<span style="color:var(--y)">⚠️ Konfirmasi via app KlikIndomaret / Alfagift</span>`;
+  document.getElementById('uiInf').style.display='';
+  document.getElementById('uiInf').innerHTML=`✅ Update: <strong>${now}</strong> <span class="stag">🔴 KlikIndomaret/Jatim</span><span class="stag">🔵 Alfagift/Jatim</span>`;
+  addLog('🎉 Selesai!','done');btn.disabled=false;btn.classList.remove('loading');document.getElementById('updTxt').textContent='Update Harga';
+}
+
+function applyCard(key,indo,alfa,src,rp){
+  const sc=(id,price,nm)=>{const el=document.getElementById(id);if(!el)return;const c=price===null?'na':price<rp?'best':price>rp?'worst':'mid';el.innerHTML=`<div class="sto">${nm}</div><div class="pr ${c}">${price!==null?f(price):'Tdk tersedia'}</div><div class="sub">${price!==null?'per pcs':'—'}</div>`;};
+  sc('pi-'+key,indo,'Indomaret');sc('pa-'+key,alfa,'Alfamart');
+  const se=document.getElementById('vs-'+key);if(se&&src)se.textContent='📌 '+src;
+  const badge=document.getElementById('vb-'+key),vt=document.getElementById('vt-'+key),card=document.querySelector(`[data-key="${key}"]`);
+  if(!badge||!card)return;
+  const best=Math.min(indo??Infinity,alfa??Infinity);
+  if(best===Infinity){badge.className='vb vb-m';badge.textContent='Data N/A';if(vt)vt.textContent='Tidak ditemukan';card.className=card.className.replace(/cheaper|same|pricier|nodata/g,'').trim()+' nodata';return;}
+  const diff=rp-best,sn=(indo!==null&&(alfa===null||indo<=alfa))?'Indomaret':'Alfamart';
+  if(diff>500){badge.className='vb vb-g';badge.textContent='Lebih Hemat';if(vt)vt.textContent=`${sn} lebih murah Rp${diff.toLocaleString('id-ID')}/pcs`;card.className=card.className.replace(/cheaper|same|pricier|nodata/g,'').trim()+' cheaper';}
+  else if(diff<-500){badge.className='vb vb-r';badge.textContent=SNAME+' Lebih Murah!';if(vt)vt.textContent=`${SNAME} lebih murah Rp${Math.abs(diff).toLocaleString('id-ID')}/pcs`;card.className=card.className.replace(/cheaper|same|pricier|nodata/g,'').trim()+' pricier';}
+  else{badge.className='vb vb-y';badge.textContent='Hampir Sama';if(vt)vt.textContent='Selisih sangat kecil';card.className=card.className.replace(/cheaper|same|pricier|nodata/g,'').trim()+' same';}
+}
+
+// ── AI CALL (pakai API_KEY dari localStorage) ──────
+async function ai(prompt,imgB64=null){
+  const content=imgB64?[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgB64}},{type:'text',text:prompt}]:prompt;
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content}]})
+  });
+  const data=await res.json();if(data.error)throw new Error(data.error.message||'API error');
+  return(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+function exJ(t){const s=t.indexOf('{'),e=t.lastIndexOf('}');if(s<0||e<0)return null;try{return JSON.parse(t.slice(s,e+1));}catch{try{return JSON.parse(t.slice(s,e+1).replace(/,\s*([}\]])/g,'$1'));}catch{return null;}}}
+
+// ── UI HELPERS ─────────────────────────────────────
+function showUI(){
+  document.getElementById('emEl').style.display='none';
+  document.getElementById('spEl').classList.add('on');
+  ['sumEl','legEl','tabsEl','totEl','ftEl','r2','btnClr','uiInf'].forEach(id=>document.getElementById(id).style.display='');
+}
+function clearAll(){
+  if(!confirm('Hapus semua data struk?'))return;
+  ITEMS=[];SNAME='Toko';SDATE='';STOT=0;
+  document.getElementById('iList').innerHTML='';
+  document.getElementById('spEl').classList.remove('on');
+  document.getElementById('shrEl').classList.remove('on');
+  ['sumEl','legEl','tabsEl','totEl','ftEl','r2','btnClr','uiInf'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('emEl').style.display='';
+  document.getElementById('hMeta').textContent='Upload struk belanja untuk mulai';
+  document.getElementById('upTxt').textContent='Upload Struk Belanja';
+  clearLog();
+}
+function toggleShr(){const e=document.getElementById('shrEl');e.classList.toggle('on');if(e.classList.contains('on'))e.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function sendWA(){const msg=`🛒 *Check Harga Mami*\n\nHai Mami! 💕\nDaftar belanja dari *${SNAME}* (${SDATE})\nTotal: *${f(STOT)}* · ${ITEMS.length} item\n\nSudah dibandingkan Indomaret & Alfamart.\nBuka di Chrome:\n${window.location.href}`;window.open('https://wa.me/?text='+encodeURIComponent(msg));}
+function addLog(msg,type=''){const el=document.getElementById('plog');el.classList.add('on');const d=document.createElement('div');d.className='ll '+(type==='done'?'ld':type==='err'?'le':'lw');d.textContent=msg;el.appendChild(d);el.scrollTop=el.scrollHeight;}
+function clearLog(){const e=document.getElementById('plog');e.innerHTML='';e.classList.remove('on');}
+function showLog(){document.getElementById('plog').classList.add('on');}
+function fCat(cat,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.ic').forEach(c=>{cat==='all'||c.dataset.cat===cat?c.classList.remove('hidden'):c.classList.add('hidden');});}
+
+// Init
+initKey();
+</script>
+</body>
+</html>
