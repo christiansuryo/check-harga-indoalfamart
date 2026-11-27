@@ -66,13 +66,16 @@ textarea{width:100%;min-height:140px;font:inherit;border:2px solid var(--line);b
 <div id="formBox"></div>
 <div id="list"></div>
 <p class="small" id="note"></p>
-<p class="small">Harga minyak goreng berasal dari pemberitaan promo per 26 November 2026 (wilayah Jawa / Jawa Timur), bukan cek rak toko. Aplikasi ini tidak mengambil harga otomatis. Perubahan Anda tersimpan hanya di perangkat ini.</p>
+<p class="small" id="info" role="status"></p>
+<p class="small">Wilayah Jawa / Jawa Timur. Perubahan di aplikasi tersimpan hanya di perangkat ini. Agar terlihat di HP lain, isi harga di Google Sheet.</p>
 </main>
 <script>
+// Tempel alamat web app Apps Script (berakhiran /exec) di antara tanda kutip:
+const URL_DATA='https://script.google.com/macros/s/AKfycbycmbXguKGAmmor2GUaBXvF7fa-Cw44Q2WoMVMISlh9fO853ZeF29rY5D8qLH36MKjF/exec';
 const CATS=[
  {id:'minyak',label:'Minyak goreng',unit:'L',size:2,note:'',icon:'<path d="M10 3h4v3l2.500 3.500V20a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V9.500L10 6z"/><path d="M12 12c1.500 2 2 2.800 2 3.600a2 2 0 0 1-4 0c0-.800.500-1.600 2-3.600z"/>'},
- {id:'beras',label:'Beras',unit:'kg',size:10,note:'Harga Indomaret di sini adalah referensi dari Klik Indomaret (tanggal tidak diketahui). Harga Alfamart belum saya temukan. Cek ulang sebelum belanja.',icon:'<path d="M8 3h8l-2 4h-4z"/><path d="M10 7C6 10 4 13 4 17c0 3 2 4 8 4s8-1 8-4c0-4-2-7-6-10"/><path d="M10 15l2-2 2 2-2 2z"/>'},
- {id:'deterjen',label:'Deterjen cair',unit:'L',size:4.5,note:'Harga So Klin adalah referensi dari Alfagift (tanggal tidak diketahui). Rinso SuperPro belum diisi: promo Alfamart yang pernah tercatat Rp61.500 sampai Rp82.900. Cek ulang sebelum belanja.',icon:'<path d="M5 8l3-3h4V3h4v3l3 3v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M8 9h4"/><circle cx="12" cy="15" r="2.500"/>'}
+ {id:'beras',label:'Beras',unit:'kg',size:10,note:'Harga bertanda \"referensi\" tidak punya tanggal promo. Cek ulang sebelum belanja.',icon:'<path d="M8 3h8l-2 4h-4z"/><path d="M10 7C6 10 4 13 4 17c0 3 2 4 8 4s8-1 8-4c0-4-2-7-6-10"/><path d="M10 15l2-2 2 2-2 2z"/>'},
+ {id:'deterjen',label:'Deterjen cair',unit:'L',size:4.5,note:'Harga bertanda \"referensi\" tidak punya tanggal promo. Cek ulang sebelum belanja.',icon:'<path d="M5 8l3-3h4V3h4v3l3 3v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M8 9h4"/><circle cx="12" cy="15" r="2.500"/>'}
 ];
 const side=(p=null,m=null,u='',mu='')=>({p,m,u,mu});
 const A='2026-11-30';
@@ -105,7 +108,7 @@ function eff(s){
  const t=today();
  const mem=S.member&&s.m!=null&&(s.p==null||s.m<s.p);
  const p=mem?s.m:s.p,u=mem?s.mu:s.u;
- return {p,u,mem,old:!!u&&u<t,ref:!!s.ref};
+ return {p,u,mem,old:!!u&&u<t,ref:!!s.ref&&!s.tgl};
 }
 function verdict(i,a){
  if(i.p==null&&a.p==null)return 'Belum ada harga';
@@ -117,7 +120,7 @@ function verdict(i,a){
 function best(cat){
  const c=CATS.find(x=>x.id===cat),all=[];
  S.items.filter(x=>x.cat===cat).forEach(x=>[['Indomaret',x.i],['Alfamart',x.a]].forEach(([store,s])=>{
-  const e=eff(s);if(e.p!=null&&!e.old)all.push({name:x.name,store,p:e.p,size:x.size,per:e.p/x.size,unit:c.unit,mem:e.mem,ref:!!x.ref});
+  const e=eff({...s,ref:x.ref});if(e.p!=null&&!e.old)all.push({name:x.name,store,p:e.p,size:x.size,per:e.p/x.size,unit:c.unit,mem:e.mem,ref:!!x.ref&&!s.tgl});
  }));
  if(!all.length)return null;
  const min=Math.min(...all.map(x=>x.per));
@@ -138,8 +141,9 @@ function render(){
  $('note').textContent=c.note;
  $('list').innerHTML=S.items.filter(x=>x.cat===S.tab).map(x=>{
   const i=eff({...x.i,ref:x.ref}),a=eff({...x.a,ref:x.ref}),ok=i.p!=null&&a.p!=null&&!i.old&&!a.old;
-  return '<article class="card"><div class="top"><div><h2>'+esc(x.name)+'</h2><div class="small">'+String(x.size).replace('.',',')+' '+c.unit+(x.at?' &middot; diperbarui '+tgl(x.at):'')+'</div></div><button data-edit="'+x.id+'">Ubah harga</button></div><div class="pair">'+priceBox('Indomaret',i,ok&&i.p<a.p)+priceBox('Alfamart',a,ok&&a.p<i.p)+'</div><div class="verdict">'+verdict(i,a)+'</div></article>';
+  return '<article class="card"><div class="top"><div><h2>'+esc(x.name)+'</h2><div class="small">'+String(x.size).replace('.',',')+' '+c.unit+(lastDate(x)?' &middot; data '+tgl(lastDate(x)):'')+'</div></div><button data-edit="'+x.id+'">Ubah harga</button></div><div class="pair">'+priceBox('Indomaret',i,ok&&i.p<a.p)+priceBox('Alfamart',a,ok&&a.p<i.p)+'</div><div class="verdict">'+verdict(i,a)+'</div></article>';
  }).join('')||'<p>Belum ada produk. Ketuk "Tambah produk".</p>';
+ info();
  if(!saved)$('msg').textContent='Perubahan tidak bisa disimpan di browser ini.';
 }
 function field(name,label,val,type,full){
@@ -165,12 +169,17 @@ document.addEventListener('submit',ev=>{
  const v=Object.fromEntries(new FormData(ev.target));
  const size=Number(v.size.replace(',','.'));
  if(!v.name.trim()||!(size>0)){$('err').textContent='Isi nama produk dan ukuran yang benar.';return}
- const it={id:editing.id||'x'+Date.now(),cat:editing.cat,name:v.name.trim(),size,at:today(),i:side(num(v.ip),num(v.im),v.iu,v.imu),a:side(num(v.ap),num(v.am),v.au,v.amu)};
+ const it={id:editing.id||'x'+Date.now(),cat:editing.cat,name:v.name.trim(),size,at:editing.at,ref:editing.ref,i:side(num(v.ip),num(v.im),v.iu,v.imu),a:side(num(v.ap),num(v.am),v.au,v.amu)};
  // harga baru dengan tanggal promo lama yang sudah lewat: kosongkan tanggalnya
  ['i','a'].forEach(s=>[['p','u'],['m','mu']].forEach(([p,u])=>{
   const was=editing[s],now=it[s];
   if(now[p]!==was[p]&&now[u]===was[u]&&now[u]&&now[u]<today())now[u]='';
  }));
+ ['i','a'].forEach(s=>{
+  const f=['p','m','u','mu'],was=editing[s],now=it[s];
+  if(f.some(k=>was[k]!==now[k])){now.tgl=today();now.manual=true}
+  else{now.tgl=was.tgl;now.manual=was.manual}
+ });
  const k=S.items.findIndex(y=>y.id===it.id);
  if(k<0)S.items.push(it);else S.items[k]=it;
  save();close();render();$('msg').textContent=saved?'Tersimpan.':'Perubahan tidak bisa disimpan di browser ini.';
@@ -190,8 +199,49 @@ document.addEventListener('click',ev=>{
   try{navigator.clipboard.writeText(text).then(()=>{$('msg').textContent='Ringkasan tersalin. Tempel di WhatsApp.'},fail)}catch(e){fail()}
  }
 });
+// tanggal data terbaru sebuah produk
+const lastDate=x=>[x.at,x.i.tgl,x.a.tgl].filter(Boolean).sort().pop()||'';
+const panjang=d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+let status_=URL_DATA?'':'Google Sheet belum dihubungkan.';
+function info(){
+ const d=S.items.filter(x=>x.cat===S.tab).map(lastDate).filter(Boolean).sort().pop();
+ $('info').textContent=(d?'Data terbaru kategori ini didapat tanggal '+panjang(d)+'. ':'Belum ada data bertanggal di kategori ini. ')+status_;
+}
+// gabungkan data dari Google Sheet; isian manual yang sama baru atau lebih baru tetap dipakai
+function gabung(items){
+ let n=0;
+ (items||[]).forEach(r=>{
+  const x=S.items.find(y=>y.id===r.id);if(!x)return;
+  ['i','a'].forEach(k=>{
+   const baru=r[k],lama=x[k];
+   if(!baru||!baru.tgl)return;
+   const tLama=lama.tgl||x.at||'';
+   if(baru.tgl<tLama||(lama.manual&&baru.tgl<=tLama))return;
+   const h={p:null,m:null,u:'',mu:'',...baru};
+   x[k]=h;n++;
+  });
+ });
+ return n;
+}
+let sedang=false,terakhir=0;
+async function cariData(){
+ if(!URL_DATA||sedang)return;
+ sedang=true;terakhir=Date.now();status_='Mengambil data terbaru...';info();
+ try{
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),90000);
+  const res=await fetch(URL_DATA,{signal:ctl.signal,cache:'no-store'});clearTimeout(t);
+  const d=await res.json();
+  gabung(d.items);save();
+  const kapan=d.dicari?new Date(d.dicari).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+  status_=d.error?'Gagal mengambil data: '+d.error+' Menampilkan data tersimpan.':'Terakhir diperiksa: '+kapan+'.';
+ }catch(e){status_='Tidak bisa mengambil data. Menampilkan data tersimpan.'}
+ sedang=false;render();
+}
+// ambil lagi saat aplikasi dibuka kembali dari latar belakang
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-terakhir>15000)cariData()});
 $('member').addEventListener('change',e=>{S.member=e.target.checked;save();render()});
 render();
+cariData();
 
 let prompt_=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();prompt_=e;$('install').hidden=false});
